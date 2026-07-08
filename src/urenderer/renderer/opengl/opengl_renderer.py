@@ -183,10 +183,23 @@ class OpenGLRenderer(Renderer):
             light = cast(Light, light_info["node"])
             light_position = cast(np.ndarray, light_info["position"])
 
-            material.shader.set_uniform(f"lights[{i}].position", position)
-            material.shader.set_uniform(f"lights[{i}].color", light.color.astype(np.float32))
-            material.shader.set_uniform(f"lights[{i}].type", int(light.type)) 
+            # Envia type 
+            material.shader.set_uniform(f"lights[{i}].type", int(light.light_type.value))
+            
+            # Envia color 
+            material.shader.set_uniform(f"lights[{i}].color", light.light_color.astype(np.float32))
 
+            # Envia intensity
+            material.shader.set_uniform(f"lights[{i}].intensity", light.light_intensity)
+            
+            if light.light_type.value == 1: # DIRECTIONAL
+                direction = light.light_direction.astype(np.float32)
+                material.shader.set_uniform(f"lights[{i}].direction", direction)
+                material.shader.set_uniform(f"lights[{i}].position", np.zeros(3, dtype=np.float32))
+            else:  # POINT
+                material.shader.set_uniform(f"lights[{i}].position", light_position)
+                material.shader.set_uniform(f"lights[{i}].direction", np.zeros(3, dtype=np.float32))
+                material.shader.set_uniform(f"lights[{i}].reference_distance", light.light_reference_distance)
         #########################################################################
 
         ## SEU CÓDIGO AQUI ######################################################
