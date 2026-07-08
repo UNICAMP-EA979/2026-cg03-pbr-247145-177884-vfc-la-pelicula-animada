@@ -69,7 +69,7 @@ class OpenGLRenderer(Renderer):
 
         ## SEU CÓDIGO AQUI ######################################################
         # Habilite o uso de GL_FRAMEBUFFER_SRGB para convertor cores para sRGB
-
+        GL.glEnable(GL.GL_FRAMEBUFFER_SRGB)
         #########################################################################
 
         glfw.set_framebuffer_size_callback(
@@ -179,10 +179,13 @@ class OpenGLRenderer(Renderer):
         # Você pode alterar o valor da uniforme 'type' da light 0 usando: 'light[0].type'.
         #
         # Utilize o método set_uniform do shader
-
         for i, light_info in enumerate(self._lights):
             light = cast(Light, light_info["node"])
             light_position = cast(np.ndarray, light_info["position"])
+
+            material.shader.set_uniform(f"lights[{i}].position", position)
+            material.shader.set_uniform(f"lights[{i}].color", light.color.astype(np.float32))
+            material.shader.set_uniform(f"lights[{i}].type", int(light.type)) 
 
         #########################################################################
 
