@@ -54,11 +54,10 @@ void main()
         vec3 halfAngle = normalize(lightDirection + viewDirection);
 
         // Fresnel (Schlick)
-        float VdotH = max(dot(viewDirection, halfAngle), 0.0);
-        vec3 fresnel = F0 + (1.0 - F0) * pow(1.0 - VdotH, 5.0);
+        vec3 fresnel = fresnelReflectance(baseColor, metallic, halfAngle, lightDirection);
 
         // Difusa (Lambert) – com correção de energia: (1 - metallic) * baseColor / PI
-        vec3 diffuse = (1.0 - metallic) * baseColor / PI;
+        vec3 diffuse = diffuseReflectance(fresnel, baseColor, metallic);
 
         // Especular (Blinn‑Phong puro, sem Fresnel)
         vec3 specular = specularReflectance(fresnel, worldNormalNormalized, halfAngle,

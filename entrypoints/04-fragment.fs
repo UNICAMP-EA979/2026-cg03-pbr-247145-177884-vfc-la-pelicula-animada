@@ -55,8 +55,7 @@ void main()
         vec3 F0 = mix(vec3(0.04), baseColor, metallic);
 
         // Fresnel de Schlick
-        float VdotH = max(dot(viewDirection, halfAngle), 0.0);
-        vec3 fresnel = F0 + (1.0 - F0) * pow(1.0 - VdotH, 5.0);
+        vec3 fresnel = fresnelReflectance(baseColor, metallic, halfAngle, lightDirection);
 
         // Difusa (Lambert) com conservação de energia
         vec3 diffuse = (1.0 - metallic) * baseColor / PI;
