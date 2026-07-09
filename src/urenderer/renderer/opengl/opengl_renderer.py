@@ -51,17 +51,25 @@ class OpenGLRenderer(Renderer):
         ## SEU CÓDIGO AQUI ######################################################
         # Inicializa o GLFW, core profile e OpenGL 3.3
 
+        glfw.init()
+        glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
+        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
+        glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
         #########################################################################
 
         ## SEU CÓDIGO AQUI ######################################################
         # Cria a janela, associando ela ao contexto
         # e configurando o tamanho dela no OpenGl
 
+        window = glfw.create_window(screen_width, screen_height, "OpenGL Renderer", None, None)
+        glfw.make_context_current(window)
+
+        GL.glViewport(0, 0, screen_width, screen_height)
         #########################################################################
 
         ## SEU CÓDIGO AQUI ######################################################
         # Habilite o uso de GL_FRAMEBUFFER_SRGB para convertor cores para sRGB
-
+        GL.glEnable(GL.GL_FRAMEBUFFER_SRGB)
         #########################################################################
 
         glfw.set_framebuffer_size_callback(
@@ -109,6 +117,8 @@ class OpenGLRenderer(Renderer):
         # Limpe os buffers de cor e profundidade (COLOR_BUFFER e DEPTH_BUFFER)
         # Para o de cor, utilize a cor self.background_color
 
+        GL.glClearColor(self.background_color[0], self.background_color[1], self.background_color[2], self.background_color[3])
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         #########################################################################
 
     def validate(self, node: Node, model_transformation: np.ndarray) -> bool:
@@ -157,6 +167,9 @@ class OpenGLRenderer(Renderer):
         #
         # Atente-se que os valores precisam ser convertidos para np.float32
 
+        material.shader.set_uniform("modelTransformation", model_transformation.astype(np.float32))
+        material.shader.set_uniform("viewTransformation", self._view_matrix.astype(np.float32))
+        material.shader.set_uniform("projectionMatrix", self._projection_matrix.astype(np.float32)) 
         #########################################################################
 
         ## SEU CÓDIGO AQUI ######################################################
@@ -166,11 +179,27 @@ class OpenGLRenderer(Renderer):
         # Você pode alterar o valor da uniforme 'type' da light 0 usando: 'light[0].type'.
         #
         # Utilize o método set_uniform do shader
-
         for i, light_info in enumerate(self._lights):
             light = cast(Light, light_info["node"])
             light_position = cast(np.ndarray, light_info["position"])
 
+            # Envia type 
+            material.shader.set_uniform(f"lights[{i}].type", int(light.light_type.value))
+            
+            # Envia color 
+            material.shader.set_uniform(f"lights[{i}].color", light.light_color.astype(np.float32))
+
+            # Envia intensity
+            material.shader.set_uniform(f"lights[{i}].intensity", light.light_intensity)
+            
+            if light.light_type.value == 1: # DIRECTIONAL
+                direction = light.light_direction.astype(np.float32)
+                material.shader.set_uniform(f"lights[{i}].direction", direction)
+                material.shader.set_uniform(f"lights[{i}].position", np.zeros(3, dtype=np.float32))
+            else:  # POINT
+                material.shader.set_uniform(f"lights[{i}].position", light_position)
+                material.shader.set_uniform(f"lights[{i}].direction", np.zeros(3, dtype=np.float32))
+                material.shader.set_uniform(f"lights[{i}].reference_distance", light.light_reference_distance)
         #########################################################################
 
         ## SEU CÓDIGO AQUI ######################################################
@@ -178,6 +207,7 @@ class OpenGLRenderer(Renderer):
         #
         # Utilize o método set_uniform do shader
 
+        material.shader.set_uniform("ambientColor", self.ambient_color.astype(np.float32))
         #########################################################################
 
         mesh.draw()
@@ -213,6 +243,7 @@ class OpenGLRenderer(Renderer):
         ## SEU CÓDIGO AQUI ######################################################
         # Troque o buffer frontal e traseiro, mostrando o novo buffer renderizado
 
+        glfw.swap_buffers(self._window)
         #########################################################################
 
         glfw.poll_events()

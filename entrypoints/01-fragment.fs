@@ -18,7 +18,7 @@ uniform Light lights[MAX_LIGHT];
 void main()
 {
     //Calcule a normal do fragmento
-    vec3 worldNormalNormalized =;
+    vec3 worldNormalNormalized = normalize(worldNormal);
 
     vec3 color = vec3(0);
     for(int i = 0; i < MAX_LIGHT; i++)
@@ -30,15 +30,17 @@ void main()
         }
 
         //Calcule dados da luz (atenuação, cor, direção)
-        float attenuation = ;
-        vec3 lightColor = ;
-        vec3 lightDirection = ;
+        float attenuation = computeLightAttenuation(light, worldPosition);
+        vec3 lightColor = light.color * light.intensity;
+        vec3 lightDirection = computeLightDirection(light, worldPosition);
 
 
         //Calcule a contribuição da luz e acumule na color
-        vec3 lightContribution = ;
+        float NdotL = max(dot(worldNormalNormalized, lightDirection), 0.0);
+        vec3 lightContribution = lightColor * NdotL * attenuation;
+        color += lightContribution;
     }
 
     // Atribua a color para a cor do fragmento
-    FragColor = ;
+    FragColor = vec4(color, 1.0);
 }
