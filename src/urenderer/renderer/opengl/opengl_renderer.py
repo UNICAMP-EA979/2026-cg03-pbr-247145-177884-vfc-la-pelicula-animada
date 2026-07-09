@@ -207,6 +207,7 @@ class OpenGLRenderer(Renderer):
         #
         # Utilize o método set_uniform do shader
 
+        material.shader.set_uniform("ambientColor", self.ambient_color.astype(np.float32))
         #########################################################################
 
         mesh.draw()
